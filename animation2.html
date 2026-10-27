@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Adventure - jQuery</title>
+
+    <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+
+    <style>
+        body {
+            margin: 0;
+            padding: 25px 12px;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            background: #eaf2ff;
+        }
+
+        h1 { color: #1e293b; }
+
+        #space {
+            width: 100%;
+            max-width: 750px;
+            height: 400px;
+            margin: 20px auto;
+            position: relative;
+            overflow: hidden;
+            border-radius: 18px;
+            border: 3px solid #475569;
+            background: radial-gradient(
+                circle at top, #243b75, #080d20 75%
+            );
+        }
+
+        .star {
+            position: absolute;
+            color: #fde047;
+            font-size: 25px;
+            animation: twinkle 1s infinite alternate;
+        }
+
+        #star1 { left: 72%; top: 20%; }
+        #star2 { left: 45%; top: 12%; }
+        #star3 { left: 88%; top: 55%; }
+
+        #ship {
+            position: absolute;
+            left: 25px;
+            bottom: 25px;
+            font-size: 48px;
+            line-height: 1;
+            z-index: 2;
+        }
+
+        #asteroid {
+            position: absolute;
+            left: 48%;
+            top: 53%;
+            font-size: 38px;
+            line-height: 1;
+        }
+
+        #message {
+            color: #facc15;
+            font-size: 20px;
+            font-weight: bold;
+            margin: 12px;
+            min-height: 24px;
+        }
+
+        button {
+            border: 0;
+            border-radius: 9px;
+            padding: 13px 20px;
+            margin: 5px;
+            color: white;
+            font-size: 15px;
+            cursor: pointer;
+        }
+
+        #launch { background: #2563eb; }
+        #boost { background: #059669; }
+        #reset { background: #dc2626; }
+
+        @keyframes twinkle {
+            from { opacity: 0.4; transform: scale(0.8); }
+            to { opacity: 1; transform: scale(1.2); }
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🚀 Space Adventure</h1>
+    <p>Launch your spaceship and collect the stars!</p>
+
+    <div id="space">
+        <div class="star" id="star1">⭐</div>
+        <div class="star" id="star2">✨</div>
+        <div class="star" id="star3">⭐</div>
+
+        <div id="asteroid">☄️</div>
+        <div id="ship">🚀</div>
+    </div>
+
+    <div id="message">Ready for launch, Captain!</div>
+
+    <button id="launch">🚀 Launch Mission</button>
+    <button id="boost">⚡ Boost</button>
+    <button id="reset">↻ Reset</button>
+
+    <script>
+        $(document).ready(function () {
+
+            let launched = false;
+            let score = 0;
+            let collected = [];
+
+            // Animate the asteroid continuously
+            function moveAsteroid() {
+                $("#asteroid")
+                    .animate({ top: "75%" }, 900)
+                    .animate({ top: "25%" }, 900, function () {
+                        if (launched) moveAsteroid();
+                    });
+            }
+
+            moveAsteroid();
+
+            // Launch the spaceship
+            $("#launch").click(function () {
+                if (launched) return;
+
+                launched = true;
+                score = 0;
+                collected = [];
+
+                $("#message").text("Mission started! Collect the stars!");
+
+                flyToStar(0);
+            });
+
+            // Fly towards each star one by one
+            function flyToStar(index) {
+                let stars = ["#star1", "#star2", "#star3"];
+
+                if (index >= stars.length) {
+                    $("#message").text(
+                        "🎉 Mission complete! Stars collected: " + score
+                    );
+                    launched = false;
+                    return;
+                }
+
+                let $star = $(stars[index]);
+                let $space = $("#space");
+
+                let targetLeft =
+                    $star.position().left - $("#ship").outerWidth();
+
+                let targetBottom =
+                    $space.innerHeight()
+                    - $star.position().top
+                    - $star.outerHeight();
+
+                $("#ship").stop(true).animate({
+                    left: Math.max(0, targetLeft) + "px",
+                    bottom: Math.max(0, targetBottom) + "px"
+                }, 1100, function () {
+
+                    if (!launched) return;
+
+                    $star.fadeOut(250);
+                    score++;
+
+                    $("#message").text(
+                        "⭐ Star collected! Score: " + score
+                    );
+
+                    setTimeout(function () {
+                        if (launched) flyToStar(index + 1);
+                    }, 300);
+                });
+            }
+
+            // Boost the spaceship
+            $("#boost").click(function () {
+                if (!launched) {
+                    $("#message").text("Launch the mission first!");
+                    return;
+                }
+
+                $("#ship").stop(true).animate({
+                    left: Math.max(
+                        0,
+                        $("#space").innerWidth()
+                        - $("#ship").outerWidth()
+                    ) + "px"
+                }, 500);
+            });
+
+            // Reset everything
+            $("#reset").click(function () {
+                launched = false;
+
+                $("#ship").stop(true).css({
+                    left: "25px",
+                    bottom: "25px"
+                });
+
+                $("#asteroid").stop(true).css({
+                    left: "48%",
+                    top: "53%"
+                });
+
+                $(".star").stop(true, true).show();
+
+                score = 0;
+                collected = [];
+
+                $("#message").text("Ready for launch, Captain!");
+
+                moveAsteroid();
+            });
+
+        });
+    </script>
+
+</body>
+</html>
